@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three Anomalies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --ground:#15161a; --panel:#1c1e24; --raised:#24272f; --border:#31353f;
+    --ink:#eceef3; --ink-2:#a3a9b6; --ink-3:#6f7684;
+    --mean:#8b8f9c;      /* M — deliberately neutral: it is not a real angle */
+    --ecc:#4a8de6;       /* E */
+    --true:#d2559f;      /* theta */
+    --orbit:#b57b2e;     /* the ellipse itself */
+    --body:#e8c34a;      /* central body at the focus */
+    --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{background:var(--ground)}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+       font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1320px;margin:0 auto;padding:26px 26px 72px;display:flex;flex-direction:column;gap:26px}
+
+  header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px}
+  h1{font-size:27px;font-weight:700;letter-spacing:-.018em;margin:0;text-wrap:balance}
+  .back{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+        color:var(--ink-3);text-decoration:none;display:inline-block;margin:0 0 7px}
+  .back:hover{color:var(--ink-2)}
+  .back:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  .lede{margin:5px 0 0;color:var(--ink-3);font-size:14px;max-width:62ch}
+  .angles{display:flex;gap:9px;flex-wrap:wrap}
+  .abox{border:1px solid var(--border);border-radius:9px;background:var(--panel);padding:8px 13px;min-width:96px}
+  .abox .k{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+  .abox .v{font-family:var(--mono);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:1px}
+
+  .figs{display:grid;grid-template-columns:1.08fr 1fr;gap:16px}
+  figure{margin:0;background:var(--panel);border:1px solid var(--border);border-radius:12px;
+         overflow:hidden;display:flex;flex-direction:column}
+  .figbar{display:flex;align-items:center;justify-content:space-between;gap:12px;
+          padding:9px 14px;border-bottom:1px solid var(--border);background:var(--raised)}
+  .figbar .t{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-2)}
+  .view{position:relative;height:clamp(320px,48vh,540px)}
+  .view>canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .figcap{padding:9px 14px;border-top:1px solid var(--border);color:var(--ink-3);font-size:12px;line-height:1.5}
+  .figcap b{color:var(--ink-2);font-weight:500}
+
+  .controls{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:16px;align-items:start}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+  .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+           color:var(--ink-3);margin:0 0 12px;font-weight:600}
+  .ctl+.ctl{margin-top:16px}
+  .ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .ctl label{font-size:13.5px;color:var(--ink-2)}
+  .ctl .val{font-family:var(--mono);font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+  .ctl .note{font-size:12px;color:var(--ink-3);line-height:1.5;margin-top:6px}
+  input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:3px;border-radius:2px;
+                    background:var(--border);outline:none;margin:9px 0 0}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+                    background:var(--ink);border:none;cursor:grab}
+  input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--ink);border:none;cursor:grab}
+  input[type=range]:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+  .btns{display:flex;gap:8px;flex-wrap:wrap}
+  button{font-family:var(--sans);font-size:12.5px;background:var(--raised);color:var(--ink-2);
+         border:1px solid var(--border);border-radius:7px;padding:8px 13px;cursor:pointer}
+  button:hover{color:var(--ink);border-color:#454a57}
+  button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  button.on{color:var(--ink);border-color:#5a6070}
+  .toggles{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .tg{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-2);cursor:pointer}
+  .tg input{accent-color:var(--ink);width:14px;height:14px;cursor:pointer;flex:0 0 auto}
+  table.read{width:100%;border-collapse:collapse;font-size:13px}
+  table.read td{padding:6px 0;border-bottom:1px solid var(--border)}
+  table.read tr:last-child td{border-bottom:none}
+  table.read td:first-child{color:var(--ink-3)}
+  table.read td:last-child{text-align:right;font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+  .note-b{font-size:12px;color:var(--ink-3);margin-top:12px;line-height:1.55}
+
+  .live{background:var(--panel);border:1px solid var(--border);border-left:2px solid var(--ink-3);
+        border-radius:0 10px 10px 0;padding:13px 15px;font-size:13.5px;color:var(--ink-2);line-height:1.65}
+  .live b{color:var(--ink);font-weight:600}
+
+  .prose{columns:2;column-gap:34px;font-size:14px;color:var(--ink-2);line-height:1.72}
+  .prose h2{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+            color:var(--ink-3);margin:0 0 10px;font-weight:600;break-after:avoid}
+  .prose section{break-inside:avoid;margin:0 0 26px}
+  .prose p{margin:0 0 11px}
+  .prose b{color:var(--ink);font-weight:600}
+  .eq{font-family:var(--mono);font-size:12.5px;color:var(--ink);background:var(--panel);
+      border:1px solid var(--border);border-radius:7px;padding:9px 12px;margin:11px 0;
+      overflow-x:auto;white-space:nowrap}
+  .chain{font-family:var(--mono);font-size:12.5px;color:var(--ink);background:var(--panel);
+         border:1px solid var(--border);border-radius:7px;padding:11px 12px;margin:11px 0;
+         overflow-x:auto;white-space:nowrap;line-height:1.9}
+
+  @media (max-width:1080px){ .controls{grid-template-columns:1fr 1fr} .prose{columns:1;max-width:68ch} }
+  @media (max-width:820px){
+    .wrap{padding:18px 16px 56px;gap:20px}
+    .figs{grid-template-columns:1fr}
+    .controls{grid-template-columns:1fr}
+    .view{height:clamp(300px,44vh,440px)}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <a class="back" href="./">← MAE 3304 tools</a>
+      <h1>Three Anomalies</h1>
+      <p class="lede">Geometry was the easy part. Time is the hard one. How M, E and θ divide the labour — MAE 3304 Astronautics&nbsp;I.</p>
+    </div>
+    <div class="angles">
+      <div class="abox"><div class="k">M mean</div><div class="v" id="vM" style="color:var(--mean)">0.0°</div></div>
+      <div class="abox"><div class="k">E eccentric</div><div class="v" id="vE" style="color:var(--ecc)">0.0°</div></div>
+      <div class="abox"><div class="k">θ true</div><div class="v" id="vT" style="color:var(--true)">0.0°</div></div>
+    </div>
+  </header>
+
+  <div class="figs">
+    <figure>
+      <div class="figbar"><span class="t">The auxiliary circle</span></div>
+      <div class="view"><canvas id="geo"></canvas></div>
+      <figcaption class="figcap">The orbit (orange) inside its circumscribed circle of radius <b>a</b>. Drop the satellite straight up onto that circle and the angle you land on is <b>E</b>, measured from the <b>centre</b>. θ is measured from the <b>focus</b>. M is a ghost that just runs at constant speed.</figcaption>
+    </figure>
+    <figure>
+      <div class="figbar"><span class="t">Kepler's equation, M = E − e sin E</span></div>
+      <div class="view"><canvas id="keq"></canvas></div>
+      <figcaption class="figcap">Solving for E means reading this curve <b>backwards</b> — enter on the M axis, come out on the E axis. There is no formula for that, which is the whole problem. Dots are Newton iterations.</figcaption>
+    </figure>
+  </div>
+
+  <div class="controls">
+    <div class="card">
+      <p class="eyebrow">The orbit</p>
+      <div class="ctl">
+        <div class="row"><label for="sE">Eccentricity e</label><span class="val" id="vEcc">0.60</span></div>
+        <input type="range" id="sE" min="0" max="0.95" step="0.01" value="0.6">
+        <p class="note">At <b>e = 0</b> all three angles collapse onto each other — that is why circular orbits have an exact solution and nothing else does.</p>
+      </div>
+      <div class="ctl">
+        <div class="row"><label for="sT">Time since periapsis  t / T</label><span class="val" id="vTime">0.000</span></div>
+        <input type="range" id="sT" min="0" max="0.9999" step="0.0005" value="0">
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="eyebrow">Playback</p>
+      <div class="btns">
+        <button id="play" type="button">Pause</button>
+        <button id="rew" type="button">Back to periapsis</button>
+      </div>
+      <div class="toggles">
+        <label class="tg"><input type="checkbox" id="tArea" checked>Swept area (Kepler's 2nd law)</label>
+        <label class="tg"><input type="checkbox" id="tGhost" checked>Mean-anomaly ghost</label>
+        <label class="tg"><input type="checkbox" id="tProj" checked>Projection up to the circle</label>
+      </div>
+      <p class="note-b">Watch the orange satellite and the grey ghost. They leave periapsis together and meet again at apoapsis — never in between.</p>
+    </div>
+
+    <div class="card">
+      <p class="eyebrow">Read-out</p>
+      <table class="read">
+        <tr><td>θ − M (equation of centre)</td><td id="rEoc">0.0°</td></tr>
+        <tr><td>r / a</td><td id="rR">0.40</td></tr>
+        <tr><td>r = a(1 − e cos E)</td><td id="rRchk">0.40 a</td></tr>
+        <tr><td>Newton iterations</td><td id="rIter">0</td></tr>
+        <tr><td>Residual |E − e sin E − M|</td><td id="rRes">0.0e+0</td></tr>
+      </table>
+      <p class="note-b" id="liveNote"></p>
+    </div>
+  </div>
+
+  <div class="live" id="caption"></div>
+
+  <div class="prose">
+    <section>
+      <h2>What this lecture is really about</h2>
+      <p>Everything up to now gave you <b>shape</b>: r = p/(1 + e cos θ) tells you where the satellite is <em>if you already know θ</em>. Nobody hands you θ. What you actually have is a clock.</p>
+      <p>So the real question is: <b>given a time, where is it?</b> And the honest answer is that no closed-form function θ(t) exists for an ellipse. Kepler's equation is the workaround, and it is <b>transcendental</b> — E appears both alone and inside a sine, so it cannot be isolated.</p>
+      <p>That single fact is why this lecture exists, why MATLAB's <b>fzero</b> shows up in the slides, and why the professor said "do not use" the integral form on slide 3.</p>
+    </section>
+
+    <section>
+      <h2>Why E was invented — the part the slides skip</h2>
+      <p>Kepler's 2nd law says area sweeps out uniformly. So if you can write the swept area as a function of an angle, that angle is linear in time. The trick: an ellipse is just a circle <b>squashed vertically</b> by the factor b/a, and squashing scales every area by the same b/a.</p>
+      <p>On the circle, the area from periapsis out to angle E is a sector minus a triangle:</p>
+      <div class="eq">A_circle = ½a²E − ½(ae)(a sin E) = (a²/2)(E − e sin E)</div>
+      <p>Squash it, and A = (ab/2)(E − e sin E). Since area is proportional to time, A/(πab) = t/T, which rearranges to</p>
+      <div class="eq">n t = E − e sin E</div>
+      <p>That is Kepler's equation, and now the strange <b>−e sin E</b> has a meaning: it is exactly the triangle you subtract. <b>E is the angle that makes area — and therefore time — come out linear.</b> θ never could.</p>
+    </section>
+
+    <section>
+      <h2>The chain, and which way is hard</h2>
+      <p>Three quantities, two links. The middle link is the only hard one.</p>
+      <div class="chain">t  →  M = n t  →  [Kepler]  →  E  →  [half-angle]  →  θ  →  r, v</div>
+      <p><b>State → time is easy.</b> From r and v you get ε, then a, then the eccentricity vector, then θ by atan2, then E, then t = (E − e sin E)/n. Every step is explicit. Slides 6–8.</p>
+      <p><b>Time → state is hard.</b> Going the other way you hit E − e sin E = M and must iterate. Slides 9–10. This asymmetry is the point of the whole lecture, and it is exactly the kind of thing an exam asks you to recognise.</p>
+    </section>
+
+    <section>
+      <h2>Solving it by hand — Newton</h2>
+      <p>fzero is fine for homework, but know the method. Newton's iteration on f(E) = E − e sin E − M is</p>
+      <div class="eq">E ← E − (E − e sin E − M) / (1 − e cos E)</div>
+      <p>Start at <b>E₀ = M + e sin M</b> rather than M — it typically saves an iteration or two. Convergence is quadratic and usually done in three or four steps for e below about 0.8. Watch the iteration counter above as you raise e: near e = 1 the denominator 1 − e cos E approaches zero at periapsis and the method starts to struggle. That is a real failure mode in comet and transfer-orbit work.</p>
+    </section>
+
+    <section>
+      <h2>Things that will cost you marks</h2>
+      <p><b>Use atan2, never atan.</b> The professor flags the quadrant check twice. The half-angle form θ = 2 arctan[√((1+e)/(1−e)) tan(E/2)] behaves because the factor of 2 outside puts the result in the right half-plane — but code it as a two-argument atan2 anyway.</p>
+      <p><b>t is time since periapsis passage</b>, not time since the epoch you were given. If t exceeds one period, subtract whole periods first, or wrap M into [0, 2π).</p>
+      <p><b>Radians.</b> Kepler's equation mixes E, which must be in radians, with sin E. Degrees will silently give you a wrong answer rather than an error.</p>
+      <p><b>a is negative for hyperbolas</b>, so n = √(μ/a³) is not real there. Hyperbolic orbits use a different anomaly (F, with sinh) and a different Kepler equation. This lecture is ellipses only — check which one the problem wants.</p>
+      <p><b>Know the geometric identities.</b> r = a(1 − e cos E) is the fastest route to range, and x = a(cos E − e), y = b sin E gives position directly in the perifocal frame without touching θ at all.</p>
+    </section>
+
+    <section>
+      <h2>PQW, briefly</h2>
+      <p>Every formula on these slides lives in the <b>perifocal frame</b>: P points at periapsis, Q sits 90° ahead in the orbit plane, W runs along the angular momentum vector. It is the frame where the orbit is flat and the algebra is clean — the z component of position is identically zero, which is why the slide-10 vectors have a 0 in the third slot.</p>
+      <p>Converting PQW to an Earth-fixed or inertial frame is a separate rotation, and it is almost certainly the next lecture.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const C={mean:'#8b8f9c',ecc:'#4a8de6',true:'#d2559f',orbit:'#b57b2e',body:'#e8c34a',
+         grid:'#282b33',axis:'#3a3f4a',ink:'#eceef3',ink2:'#a3a9b6',ink3:'#6f7684',panel:'#1c1e24'};
+const TAU=Math.PI*2, deg=r=>r*180/Math.PI;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const S={ e:0.6, tau:0, playing:!reduceMotion, area:true, ghost:true, proj:true };
+let iters=[], nIter=0, residual=0;
+
+/* ---- Kepler solver: Newton, with the iteration path kept for the graph ---- */
+function solveKepler(M,e){
+  M = ((M % TAU) + TAU) % TAU;
+  let E = M + e*Math.sin(M);            // better than E0 = M
+  iters=[E];
+  let k=0;
+  for(; k<60; k++){
+    const f = E - e*Math.sin(E) - M;
+    const fp = 1 - e*Math.cos(E);
+    if(Math.abs(fp) < 1e-12) break;
+    const dE = f/fp;
+    E -= dE;
+    iters.push(E);
+    if(Math.abs(dE) < 1e-13) break;
+  }
+  nIter = k+1;
+  residual = Math.abs(E - e*Math.sin(E) - M);
+  return E;
+}
+// numerically safe true anomaly
+const trueFromE=(E,e)=>{
+  const th = 2*Math.atan2(Math.sqrt(1+e)*Math.sin(E/2), Math.sqrt(1-e)*Math.cos(E/2));
+  return (th+TAU)%TAU;
+};
+
+/* ================= geometry canvas ================= */
+const gc=document.getElementById('geo'), gx=gc.getContext('2d');
+function drawGeo(M,E,th){
+  const dpr=Math.min(devicePixelRatio,2);
+  const w=gc.clientWidth||10, h=gc.clientHeight||10;
+  gc.width=w*dpr; gc.height=h*dpr; gx.setTransform(dpr,0,0,dpr,0,0);
+  gx.fillStyle=C.panel; gx.fillRect(0,0,w,h);
+  const e=S.e, a=1, b=Math.sqrt(1-e*e);
+  const pad=44, s=Math.min((w-2*pad)/2, (h-2*pad)/2);
+  const cx=w/2, cy=h/2;                       // ellipse / circle centre
+  const X=x=>cx+s*x, Y=y=>cy-s*y;
+  // everything is in the CENTRE frame: satellite = (a cosE, b sinE), focus = (ae, 0)
+  const F={x:e,y:0};
+  const Sat={x:Math.cos(E), y:b*Math.sin(E)};
+  const Aux={x:Math.cos(E), y:Math.sin(E)};
+  const Ghost={x:Math.cos(M), y:Math.sin(M)};
+
+  const mono=n=>gx.font='500 '+n+'px "IBM Plex Mono",ui-monospace,monospace';
+
+  // swept area from periapsis, about the focus
+  if(S.area){
+    gx.save(); gx.beginPath(); gx.moveTo(X(F.x),Y(F.y));
+    const N=160;
+    for(let i=0;i<=N;i++){
+      const Ei=E*i/N;
+      gx.lineTo(X(Math.cos(Ei)), Y(b*Math.sin(Ei)));
+    }
+    gx.closePath(); gx.fillStyle=C.orbit+'2a'; gx.fill(); gx.restore();
+  }
+
+  // auxiliary circle
+  gx.save(); gx.setLineDash([4,4]); gx.strokeStyle=C.axis; gx.lineWidth=1.4;
+  gx.beginPath(); gx.arc(cx,cy,s,0,TAU); gx.stroke(); gx.restore();
+
+  // axes through the centre
+  gx.strokeStyle=C.grid; gx.lineWidth=1;
+  gx.beginPath(); gx.moveTo(X(-1.15),Y(0)); gx.lineTo(X(1.15),Y(0));
+  gx.moveTo(X(0),Y(-1.15)); gx.lineTo(X(0),Y(1.15)); gx.stroke();
+
+  // the orbit
+  gx.strokeStyle=C.orbit; gx.lineWidth=2.2;
+  gx.beginPath(); gx.ellipse(cx,cy,s,s*b,0,0,TAU); gx.stroke();
+
+  // angle arcs
+  const arc=(ox,oy,r0,a0,a1,col)=>{
+    gx.save(); gx.strokeStyle=col; gx.lineWidth=2;
+    gx.beginPath(); gx.arc(X(ox),Y(oy),r0,-a1,-a0); gx.stroke(); gx.restore();
+  };
+  arc(0,0,34,0,E,C.ecc);
+  arc(F.x,0,26,0,th,C.true);
+
+  // E: centre -> point on circle
+  gx.strokeStyle=C.ecc; gx.lineWidth=1.8;
+  gx.beginPath(); gx.moveTo(X(0),Y(0)); gx.lineTo(X(Aux.x),Y(Aux.y)); gx.stroke();
+
+  // projection line satellite -> circle
+  if(S.proj){
+    gx.save(); gx.setLineDash([3,3]); gx.strokeStyle=C.ecc; gx.lineWidth=1.3;
+    gx.beginPath(); gx.moveTo(X(Sat.x),Y(Sat.y)); gx.lineTo(X(Aux.x),Y(Aux.y)); gx.stroke(); gx.restore();
+    gx.fillStyle=C.ecc; gx.beginPath(); gx.arc(X(Aux.x),Y(Aux.y),4.5,0,TAU); gx.fill();
+  }
+
+  // theta: focus -> satellite (the physical radius vector)
+  gx.strokeStyle=C.true; gx.lineWidth=2;
+  gx.beginPath(); gx.moveTo(X(F.x),Y(F.y)); gx.lineTo(X(Sat.x),Y(Sat.y)); gx.stroke();
+
+  // mean-anomaly ghost on the circle
+  if(S.ghost){
+    gx.save(); gx.setLineDash([3,3]); gx.strokeStyle=C.mean; gx.lineWidth=1.4;
+    gx.beginPath(); gx.moveTo(X(0),Y(0)); gx.lineTo(X(Ghost.x),Y(Ghost.y)); gx.stroke(); gx.restore();
+    gx.fillStyle=C.mean; gx.beginPath(); gx.arc(X(Ghost.x),Y(Ghost.y),5,0,TAU); gx.fill();
+    mono(10.5); gx.fillStyle=C.mean; gx.textAlign='center';
+    gx.fillText('M', X(Ghost.x*1.13), Y(Ghost.y*1.13)+4);
+  }
+
+  // centre + focus markers
+  gx.strokeStyle=C.ink3; gx.lineWidth=1.3;
+  gx.beginPath(); gx.moveTo(X(0)-5,Y(0)); gx.lineTo(X(0)+5,Y(0));
+  gx.moveTo(X(0),Y(0)-5); gx.lineTo(X(0),Y(0)+5); gx.stroke();
+  gx.fillStyle=C.body; gx.beginPath(); gx.arc(X(F.x),Y(F.y),7,0,TAU); gx.fill();
+  gx.strokeStyle=C.panel; gx.lineWidth=2; gx.beginPath(); gx.arc(X(F.x),Y(F.y),7,0,TAU); gx.stroke();
+
+  // the satellite
+  gx.fillStyle=C.orbit; gx.beginPath(); gx.arc(X(Sat.x),Y(Sat.y),6,0,TAU); gx.fill();
+  gx.strokeStyle=C.panel; gx.lineWidth=2; gx.beginPath(); gx.arc(X(Sat.x),Y(Sat.y),6,0,TAU); gx.stroke();
+
+  // labels — three staggered rows so they never collide, even as e -> 0
+  mono(10.5); gx.textBaseline='alphabetic';
+  gx.textAlign='left';
+  gx.fillStyle=C.ecc;  gx.fillText('E', X(0)+40, Y(0)-10);
+  gx.fillStyle=C.true; gx.fillText('θ', X(F.x)+30, Y(0)-10);
+  gx.textAlign='center';
+  gx.fillStyle=C.ink3; gx.fillText('centre',    X(0),   Y(0)+20);
+  gx.fillStyle=C.body; gx.fillText('focus',     X(F.x), Y(0)+36);
+  gx.fillStyle=C.ink3; gx.fillText('periapsis', X(1),   Y(0)+52);
+}
+
+/* ================= Kepler-equation canvas ================= */
+const kc=document.getElementById('keq'), kx=kc.getContext('2d');
+function drawKeq(M,E){
+  const dpr=Math.min(devicePixelRatio,2);
+  const w=kc.clientWidth||10, h=kc.clientHeight||10;
+  kc.width=w*dpr; kc.height=h*dpr; kx.setTransform(dpr,0,0,dpr,0,0);
+  kx.fillStyle=C.panel; kx.fillRect(0,0,w,h);
+  const L=52,R=22,T=22,B=40;
+  const X=v=>L+(w-L-R)*v/TAU, Y=v=>T+(h-T-B)*(1-v/TAU);
+  const mono=n=>kx.font='500 '+n+'px "IBM Plex Mono",ui-monospace,monospace';
+
+  // grid
+  kx.strokeStyle=C.grid; kx.lineWidth=1; kx.fillStyle=C.ink3; mono(10);
+  const ticks=[[0,'0'],[Math.PI/2,'π/2'],[Math.PI,'π'],[3*Math.PI/2,'3π/2'],[TAU,'2π']];
+  kx.textAlign='center'; kx.textBaseline='top';
+  ticks.forEach(([v,t])=>{ kx.beginPath();kx.moveTo(X(v),T);kx.lineTo(X(v),h-B);kx.stroke();
+                           kx.fillText(t,X(v),h-B+8); });
+  kx.textAlign='right'; kx.textBaseline='middle';
+  ticks.forEach(([v,t])=>{ kx.beginPath();kx.moveTo(L,Y(v));kx.lineTo(w-R,Y(v));kx.stroke();
+                           kx.fillText(t,L-8,Y(v)); });
+
+  // y = x reference (this IS the curve when e = 0)
+  kx.save(); kx.setLineDash([4,4]); kx.strokeStyle=C.axis; kx.lineWidth=1.3;
+  kx.beginPath(); kx.moveTo(X(0),Y(0)); kx.lineTo(X(TAU),Y(TAU)); kx.stroke(); kx.restore();
+
+  // M(E) = E - e sin E
+  kx.strokeStyle=C.mean; kx.lineWidth=2.4; kx.lineJoin='round';
+  kx.beginPath();
+  for(let i=0;i<=400;i++){
+    const Ei=TAU*i/400, Mi=Ei-S.e*Math.sin(Ei);
+    i?kx.lineTo(X(Ei),Y(Mi)):kx.moveTo(X(Ei),Y(Mi));
+  }
+  kx.stroke();
+
+  // read backwards: horizontal in at M, vertical down at E
+  kx.save(); kx.setLineDash([5,4]); kx.lineWidth=1.6;
+  kx.strokeStyle=C.mean;
+  kx.beginPath(); kx.moveTo(L,Y(M)); kx.lineTo(X(E),Y(M)); kx.stroke();
+  kx.strokeStyle=C.ecc;
+  kx.beginPath(); kx.moveTo(X(E),Y(M)); kx.lineTo(X(E),h-B); kx.stroke();
+  kx.restore();
+
+  // Newton iterates
+  iters.forEach((Ei,i)=>{
+    const Mi=Ei-S.e*Math.sin(Ei);
+    if(Ei<-0.2||Ei>TAU+0.2) return;
+    kx.fillStyle = i===iters.length-1 ? C.ecc : C.ink3;
+    kx.beginPath(); kx.arc(X(Ei),Y(Mi), i===iters.length-1?5:3, 0, TAU); kx.fill();
+  });
+
+  // solution marker
+  kx.fillStyle=C.ecc; kx.beginPath(); kx.arc(X(E),Y(M),5.5,0,TAU); kx.fill();
+  kx.strokeStyle=C.panel; kx.lineWidth=2; kx.beginPath(); kx.arc(X(E),Y(M),5.5,0,TAU); kx.stroke();
+
+  // axis titles
+  mono(10.5); kx.fillStyle=C.mean; kx.textAlign='left'; kx.textBaseline='alphabetic';
+  kx.fillText('M  (known: M = n t)', 8, T-6);
+  kx.fillStyle=C.ecc; kx.textAlign='right';
+  kx.fillText('E  (wanted)', w-R, h-8);
+}
+
+/* ================= update ================= */
+function update(){
+  const M=(S.tau*TAU)%TAU;
+  const E=solveKepler(M,S.e);
+  const th=trueFromE(E,S.e);
+  const e=S.e;
+  const rOverA=1-e*Math.cos(E);
+
+  drawGeo(M,E,th); drawKeq(M,E);
+
+  const f1=x=>deg(x).toFixed(1)+'°';
+  document.getElementById('vM').textContent=f1(M);
+  document.getElementById('vE').textContent=f1(E);
+  document.getElementById('vT').textContent=f1(th);
+  document.getElementById('vEcc').textContent=e.toFixed(2);
+  document.getElementById('vTime').textContent=S.tau.toFixed(3);
+
+  let eoc=deg(th-M); if(eoc>180)eoc-=360; if(eoc<-180)eoc+=360;
+  const eocEl=document.getElementById('rEoc');
+  eocEl.textContent=(eoc>=0?'+':'')+eoc.toFixed(1)+'°';
+  eocEl.style.color = Math.abs(eoc)<0.05 ? '' : (eoc>0?C.true:C.mean);
+
+  document.getElementById('rR').textContent=rOverA.toFixed(3);
+  document.getElementById('rRchk').textContent=rOverA.toFixed(3)+' a';
+  document.getElementById('rIter').textContent=String(nIter);
+  document.getElementById('rRes').textContent=residual.toExponential(1);
+
+  document.getElementById('liveNote').innerHTML = e<0.005
+    ? 'At e = 0 the curve on the right <b>is</b> the dashed diagonal, so M = E = θ and no solving is needed.'
+    : 'θ − M is the <b>equation of centre</b>: how far ahead of (or behind) the ghost the real satellite runs. It is zero only at periapsis and apoapsis.';
+
+  const near = x=>Math.abs(((M-x+Math.PI)%TAU+TAU)%TAU-Math.PI)<0.12;
+  let cap;
+  if(e<0.005) cap='A circular orbit. All three anomalies are the same angle, the ghost sits exactly on the satellite, and Kepler\'s equation degenerates to M = E. <b>This is the only case with a closed-form answer</b> — raise e and watch that break.';
+  else if(near(0)) cap='At <b>periapsis</b>. All three angles read zero together, and the satellite is at its fastest. From here the real satellite immediately pulls <b>ahead</b> of the mean ghost.';
+  else if(near(Math.PI)) cap='At <b>apoapsis</b>. The satellite and the ghost have caught up with each other again — θ = E = M = 180°. Between the two apses they never agree.';
+  else if(M<Math.PI) cap='Outbound. The satellite is <b>ahead</b> of the mean ghost, because it moved fast through periapsis and banked angle early. θ &gt; E &gt; M.';
+  else cap='Inbound. The satellite is now <b>behind</b> the ghost, crawling through the far side of the orbit. θ &lt; E &lt; M — and the ordering has flipped from the outbound leg.';
+  document.getElementById('caption').innerHTML=cap;
+}
+
+/* ================= wiring ================= */
+const sE=document.getElementById('sE'), sT=document.getElementById('sT');
+sE.addEventListener('input',()=>{S.e=parseFloat(sE.value);update();});
+sT.addEventListener('input',()=>{S.tau=parseFloat(sT.value);S.playing=false;syncPlay();update();});
+const playBtn=document.getElementById('play');
+function syncPlay(){ playBtn.textContent=S.playing?'Pause':'Play'; playBtn.classList.toggle('on',S.playing); }
+playBtn.addEventListener('click',()=>{S.playing=!S.playing;syncPlay();});
+document.getElementById('rew').addEventListener('click',()=>{S.tau=0;sT.value=0;update();});
+document.getElementById('tArea').addEventListener('change',e=>{S.area=e.target.checked;update();});
+document.getElementById('tGhost').addEventListener('change',e=>{S.ghost=e.target.checked;update();});
+document.getElementById('tProj').addEventListener('change',e=>{S.proj=e.target.checked;update();});
+
+if(window.ResizeObserver){ const ro=new ResizeObserver(()=>update()); ro.observe(gc); ro.observe(kc); }
+addEventListener('resize',update);
+
+syncPlay(); update();
+let last=performance.now();
+(function loop(now){
+  requestAnimationFrame(loop);
+  const dt=(now-last)/1000; last=now;
+  if(S.playing){
+    S.tau=(S.tau+dt/11)%1;      // one orbit every 11 seconds
+    sT.value=S.tau;
+    update();
+  }
+})(performance.now());
+})();
+</script>
+</body>
+</html>

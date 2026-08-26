@@ -3,926 +3,137 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cutting the Cone</title>
+<title>Astronautics Visualisers</title>
+<meta name="description" content="Interactive visualisers for MAE 3304 Astronautics I: conic sections and orbit shape, and Kepler's equation.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
 <style>
   :root{
-    --ground:#15161a;
-    --panel:#1c1e24;
-    --raised:#24272f;
-    --border:#31353f;
-    --ink:#eceef3;
-    --ink-2:#a3a9b6;
-    --ink-3:#6f7684;
-    --circle:#4a8de6;
-    --ellipse:#b57b2e;
-    --parabola:#d2559f;
-    --hyperbola:#43a05a;
-    --degen-line:#d4544a;
-    --degen-point:#9b6fd4;
-    --focus:#e8c34a;
+    --ground:#15161a; --panel:#1c1e24; --raised:#24272f; --border:#31353f;
+    --ink:#eceef3; --ink-2:#a3a9b6; --ink-3:#6f7684;
+    --circle:#4a8de6; --orbit:#b57b2e; --true:#d2559f; --hyp:#43a05a;
+    --body:#e8c34a; --mean:#8b8f9c;
     --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box}
   html{background:var(--ground)}
-  body{
-    margin:0;background:var(--ground);color:var(--ink);
-    font-family:var(--sans);font-size:15px;line-height:1.6;
-    -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:1320px;margin:0 auto;padding:26px 26px 72px;display:flex;flex-direction:column;gap:26px}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+       font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1060px;margin:0 auto;padding:56px 26px 80px;display:flex;flex-direction:column;gap:40px}
 
-  /* ---------- header ---------- */
-  header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px}
-  h1{
-    font-size:27px;font-weight:700;letter-spacing:-.018em;margin:0;text-wrap:balance;
-  }
-  .lede{margin:5px 0 0;color:var(--ink-3);font-size:14px;max-width:60ch}
-  .now{
-    display:flex;align-items:baseline;gap:12px;
-    border:1px solid var(--border);border-radius:10px;background:var(--panel);
-    padding:9px 16px;
-  }
-  .now .name{font-size:19px;font-weight:600;letter-spacing:-.01em}
-  .now .e{font-family:var(--mono);font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
-  .now .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
+  .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;
+           color:var(--ink-3);margin:0 0 10px;font-weight:600}
+  h1{font-size:34px;font-weight:700;letter-spacing:-.022em;margin:0;text-wrap:balance}
+  .lede{margin:12px 0 0;color:var(--ink-2);font-size:15.5px;max-width:62ch}
+  .lede b{color:var(--ink);font-weight:600}
 
-  /* ---------- figure band ---------- */
-  .figs{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  figure{
-    margin:0;background:var(--panel);border:1px solid var(--border);border-radius:12px;
-    overflow:hidden;display:flex;flex-direction:column;
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .tool{
+    display:flex;flex-direction:column;text-decoration:none;color:inherit;
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;
+    transition:border-color .14s ease, transform .14s ease;
   }
-  .figbar{
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
-    padding:9px 14px;border-bottom:1px solid var(--border);background:var(--raised);
-  }
-  .figbar .t{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-2)}
-  .figbar button{
-    font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;
-    background:transparent;color:var(--ink-3);border:1px solid var(--border);border-radius:5px;
-    padding:4px 9px;cursor:pointer;
-  }
-  .figbar button:hover{color:var(--ink);border-color:#454a57}
-  .figbar button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  .view{position:relative;height:clamp(300px,46vh,520px)}
-  .view>canvas,.view>div{position:absolute;inset:0;width:100%;height:100%;display:block}
-  .figcap{
-    padding:9px 14px;border-top:1px solid var(--border);color:var(--ink-3);font-size:12px;line-height:1.5;
-  }
-  .figcap b{color:var(--ink-2);font-weight:500}
+  .tool:hover{border-color:#4a505e;transform:translateY(-2px)}
+  .tool:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  .thumb{display:block;width:100%;height:auto;background:#131418;border-bottom:1px solid var(--border)}
+  .tbody{padding:18px 20px 20px}
+  .tool h2{font-size:19px;font-weight:650;letter-spacing:-.012em;margin:0}
+  .tool p{margin:7px 0 0;color:var(--ink-3);font-size:13.5px;line-height:1.6}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+  .tag{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+       color:var(--ink-3);border:1px solid var(--border);border-radius:5px;padding:3px 7px}
+  .go{margin-top:15px;font-family:var(--mono);font-size:11px;letter-spacing:.11em;
+      text-transform:uppercase;color:var(--ink-2)}
+  .tool:hover .go{color:var(--ink)}
 
-  /* ---------- the a band ---------- */
-  .aband{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:stretch}
-  .aband figure .view{height:clamp(240px,30vh,320px)}
-  .cmp{width:100%;border-collapse:collapse;font-size:12.5px}
-  .cmp th{
-    font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;
-    color:var(--ink-3);text-align:left;font-weight:600;padding:0 10px 8px 0;border-bottom:1px solid var(--border);
-  }
-  .cmp th:last-child,.cmp td:last-child{padding-right:0}
-  .cmp td{padding:9px 10px 9px 0;border-bottom:1px solid var(--border);color:var(--ink-2);vertical-align:top}
-  .cmp tr:last-child td{border-bottom:none}
-  .cmp .cls{display:flex;align-items:center;gap:7px;color:var(--ink);font-weight:600;white-space:nowrap}
-  .cmp .cls i{width:8px;height:8px;border-radius:50%;flex:0 0 8px}
-  .cmp .num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .cmp tr.on td{background:rgba(255,255,255,.035)}
+  .about{border-top:1px solid var(--border);padding-top:26px;display:grid;
+         grid-template-columns:1fr 1fr;gap:30px;font-size:13.5px;color:var(--ink-3);line-height:1.7}
+  .about h3{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
+            color:var(--ink-3);margin:0 0 9px;font-weight:600}
+  .about p{margin:0 0 10px}
+  .about b{color:var(--ink-2);font-weight:600}
+  .about a{color:var(--ink-2)}
 
-  /* ---------- controls ---------- */
-  .controls{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:16px;align-items:start}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
-  .eyebrow{
-    font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
-    color:var(--ink-3);margin:0 0 12px;
+  @media (max-width:760px){
+    .wrap{padding:36px 18px 60px;gap:30px}
+    h1{font-size:28px}
+    .grid{grid-template-columns:1fr}
+    .about{grid-template-columns:1fr;gap:20px}
   }
-  .ctl+.ctl{margin-top:16px}
-  .ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-  .ctl label{font-size:13.5px;color:var(--ink-2)}
-  .ctl .val{font-family:var(--mono);font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
-  .ctl .note{font-size:12px;color:var(--ink-3);line-height:1.5;margin-top:6px}
-  input[type=range]{
-    width:100%;-webkit-appearance:none;appearance:none;height:3px;border-radius:2px;
-    background:var(--border);outline:none;margin:9px 0 0;
-  }
-  input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--ink);
-    border:none;cursor:grab;
-  }
-  input[type=range]::-moz-range-thumb{
-    width:15px;height:15px;border-radius:50%;background:var(--ink);border:none;cursor:grab;
-  }
-  input[type=range]:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
-  .presets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .presets button{
-    display:flex;align-items:center;gap:8px;font-family:var(--sans);font-size:12.5px;
-    background:var(--raised);color:var(--ink-2);border:1px solid var(--border);border-radius:7px;
-    padding:9px 10px;cursor:pointer;text-align:left;
-  }
-  .presets button:hover{color:var(--ink);border-color:#454a57}
-  .presets button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  .presets button .sw{width:9px;height:9px;border-radius:50%;flex:0 0 9px}
-  .presets button.wide{grid-column:1/-1}
-  table.read{width:100%;border-collapse:collapse;font-size:13px}
-  table.read td{padding:6px 0;border-bottom:1px solid var(--border)}
-  table.read tr:last-child td{border-bottom:none}
-  table.read td:first-child{color:var(--ink-3)}
-  table.read td:last-child{
-    text-align:right;font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums;
-  }
-  .toggles{display:flex;flex-direction:column;gap:11px}
-  .tg{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2);cursor:pointer}
-  .tg input{accent-color:var(--ink);width:14px;height:14px;cursor:pointer;flex:0 0 auto}
-  .readout-note{font-size:12px;color:var(--ink-3);margin-top:12px;line-height:1.55}
-
-  /* ---------- prose ---------- */
-  .prose{columns:2;column-gap:34px;font-size:14px;color:var(--ink-2);line-height:1.72}
-  .prose h2{
-    font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;
-    color:var(--ink-3);margin:0 0 10px;font-weight:600;break-after:avoid;
-  }
-  .prose section{break-inside:avoid;margin:0 0 26px}
-  .prose p{margin:0 0 11px}
-  .prose b{color:var(--ink);font-weight:600}
-  .eq{
-    font-family:var(--mono);font-size:12.5px;color:var(--ink);
-    background:var(--panel);border:1px solid var(--border);border-radius:7px;
-    padding:9px 12px;margin:11px 0;overflow-x:auto;white-space:nowrap;
-  }
-  .live{
-    background:var(--panel);border:1px solid var(--border);border-left:2px solid var(--ink-3);
-    border-radius:0 10px 10px 0;padding:13px 15px;font-size:13.5px;color:var(--ink-2);line-height:1.65;
-  }
-  .live b{color:var(--ink);font-weight:600}
-
-  @media (max-width:1080px){
-    .controls{grid-template-columns:1fr 1fr}
-    .aband{grid-template-columns:1fr}
-    .prose{columns:1;max-width:68ch}
-  }
-  @media (max-width:820px){
-    .wrap{padding:18px 16px 56px;gap:20px}
-    .figs{grid-template-columns:1fr}
-    .controls{grid-template-columns:1fr}
-    .view{height:clamp(280px,42vh,420px)}
-  }
-  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media (prefers-reduced-motion:reduce){.tool{transition:none}.tool:hover{transform:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header>
-    <div>
-      <h1>Cutting the Cone</h1>
-      <p class="lede">Why every orbit is a circle, an ellipse, a parabola, or a hyperbola — and nothing else. MAE 3304 Astronautics&nbsp;I.</p>
-    </div>
-    <div class="now">
-      <span class="name" id="typeName">Circle</span>
-      <span class="lbl">e</span>
-      <span class="e" id="eNow">0.00</span>
-    </div>
+    <p class="eyebrow">MAE 3304 · Astronautics I · UT Arlington</p>
+    <h1>Astronautics Visualisers</h1>
+    <p class="lede">Small interactive tools for the parts of orbital mechanics that are hard to picture from a chalkboard. Each one is a single page — <b>drag the sliders and the maths moves.</b></p>
   </header>
 
-  <div class="figs">
-    <figure>
-      <div class="figbar">
-        <span class="t">The cut in 3D</span>
-        <button id="reset" type="button">Reset view</button>
+  <div class="grid">
+
+    <a class="tool" href="conics.html">
+      <svg class="thumb" viewBox="0 0 320 180" role="img" aria-label="A double cone sliced by a tilted plane, with the elliptical section highlighted">
+        <g fill="none" stroke="#585e6b" stroke-width="1.4">
+          <path d="M160 92 L104 36 A56 13 0 0 0 216 36 Z" fill="#757b88" fill-opacity=".14"/>
+          <path d="M160 92 L104 148 A56 13 0 0 0 216 148 Z" fill="#757b88" fill-opacity=".14"/>
+          <ellipse cx="160" cy="36" rx="56" ry="13"/>
+          <ellipse cx="160" cy="148" rx="56" ry="13"/>
+        </g>
+        <path d="M34 84 L286 56 L286 64 L34 92 Z" fill="#d6d9e0" fill-opacity=".12" stroke="#878d9a" stroke-opacity=".5" stroke-width="1"/>
+        <ellipse cx="160" cy="74" rx="42" ry="10" transform="rotate(-6 160 74)"
+                 fill="none" stroke="#b57b2e" stroke-width="2.4"/>
+        <line x1="160" y1="24" x2="160" y2="160" stroke="#3a3f4a" stroke-width="1" stroke-dasharray="4 4"/>
+      </svg>
+      <div class="tbody">
+        <h2>Cutting the Cone</h2>
+        <p>Tilt a plane through a double cone and watch the section turn from circle to ellipse to parabola to hyperbola. Shows why an orbit can only ever be one of those four.</p>
+        <div class="tags"><span class="tag">Eccentricity</span><span class="tag">Dandelin spheres</span><span class="tag">3D</span></div>
+        <div class="go">Open →</div>
       </div>
-      <div class="view"><div id="three"></div></div>
-      <figcaption class="figcap">Drag to orbit the camera, scroll to zoom. The <b>tilt of the plane</b> is the only thing that changes the kind of curve.</figcaption>
-    </figure>
-    <figure>
-      <div class="figbar"><span class="t">The section, face-on</span></div>
-      <div class="view"><canvas id="sect"></canvas></div>
-      <figcaption class="figcap">The true shape of the cut, seen looking straight down onto the plane. The <b>amber dot is a focus</b> — that is where the planet sits. <b>a</b> runs from the centre to the vertex; <b>p</b> is the half-chord through the focus.</figcaption>
-    </figure>
+    </a>
+
+    <a class="tool" href="kepler.html">
+      <svg class="thumb" viewBox="0 0 320 180" role="img" aria-label="An ellipse inside its auxiliary circle, with the eccentric and true anomaly angles marked">
+        <circle cx="160" cy="90" r="58" fill="none" stroke="#3a3f4a" stroke-width="1.3" stroke-dasharray="4 4"/>
+        <ellipse cx="160" cy="90" rx="58" ry="44" fill="none" stroke="#b57b2e" stroke-width="2.4"/>
+        <line x1="102" y1="90" x2="218" y2="90" stroke="#282b33" stroke-width="1"/>
+        <line x1="160" y1="90" x2="193" y2="42" stroke="#4a8de6" stroke-width="1.8"/>
+        <line x1="193" y1="54" x2="193" y2="42" stroke="#4a8de6" stroke-width="1.2" stroke-dasharray="3 3"/>
+        <line x1="198" y1="90" x2="193" y2="54" stroke="#d2559f" stroke-width="1.8"/>
+        <circle cx="193" cy="42" r="4" fill="#4a8de6"/>
+        <circle cx="198" cy="90" r="5.5" fill="#e8c34a"/>
+        <circle cx="193" cy="54" r="5" fill="#b57b2e"/>
+        <circle cx="120" cy="55" r="4.5" fill="#8b8f9c"/>
+        <line x1="160" y1="90" x2="120" y2="55" stroke="#8b8f9c" stroke-width="1.2" stroke-dasharray="3 3"/>
+      </svg>
+      <div class="tbody">
+        <h2>Three Anomalies</h2>
+        <p>Where is the satellite at time t? Watch the mean, eccentric and true anomalies pull apart, and see why Kepler's equation has to be solved numerically.</p>
+        <div class="tags"><span class="tag">Kepler's equation</span><span class="tag">Newton</span><span class="tag">Animated</span></div>
+        <div class="go">Open →</div>
+      </div>
+    </a>
+
   </div>
 
-  <div class="aband">
-    <figure>
-      <div class="figbar"><span class="t">Semi-major axis a, across every class</span></div>
-      <div class="view"><canvas id="achart"></canvas></div>
-      <figcaption class="figcap">a / p = 1 / (1 − e²). It grows without bound as e → 1, <b>blows up at the parabola</b>, and comes back <b>negative</b> for hyperbolas. Hover to read any value.</figcaption>
-    </figure>
-    <div class="card">
-      <p class="eyebrow">What a does in each case</p>
-      <table class="cmp">
-        <thead>
-          <tr><th>Class</th><th>e</th><th>a</th><th>ε = −μ/2a</th></tr>
-        </thead>
-        <tbody>
-          <tr id="rowCircle"><td><span class="cls"><i style="background:var(--circle)"></i>Circle</span></td>
-            <td class="num">0</td><td class="num">a = p = r</td><td>negative</td></tr>
-          <tr id="rowEllipse"><td><span class="cls"><i style="background:var(--ellipse)"></i>Ellipse</span></td>
-            <td class="num">0 – 1</td><td class="num">p &lt; a &lt; ∞</td><td>negative</td></tr>
-          <tr id="rowParabola"><td><span class="cls"><i style="background:var(--parabola)"></i>Parabola</span></td>
-            <td class="num">1</td><td class="num">→ ∞</td><td>zero</td></tr>
-          <tr id="rowHyperbola"><td><span class="cls"><i style="background:var(--hyperbola)"></i>Hyperbola</span></td>
-            <td class="num">&gt; 1</td><td class="num">negative</td><td>positive</td></tr>
-        </tbody>
-      </table>
-      <p class="readout-note">Vis-viva reads v² = μ(2/r − 1/a). At the parabola 1/a = 0, so v² = 2μ/r — escape speed exactly. Past it a flips sign and v² exceeds it. <b>p = h²/μ stays finite in all four cases</b>, which is why the orbit equation is written with p and not a.</p>
+  <div class="about">
+    <div>
+      <h3>What these are</h3>
+      <p>Study aids built alongside <b>MAE 3304 Astronautics I</b> at the University of Texas at Arlington. They are not official course material and carry no endorsement from the department — just an attempt to make a few ideas visible.</p>
+      <p>Each tool is one self-contained HTML file with no build step. Open it, or clone the repository and open the file directly. Everything runs in the browser.</p>
+    </div>
+    <div>
+      <h3>Course reference</h3>
+      <p>Curtis, H. D. (2020). <i>Orbital Mechanics for Engineering Students</i>, Revised 4th Edition. Butterworth-Heinemann, Elsevier.</p>
+      <p>Corrections and suggestions are welcome — open an issue on the repository.</p>
     </div>
   </div>
 
-  <div class="controls">
-    <div class="card">
-      <p class="eyebrow">Change the cut</p>
-      <div class="ctl">
-        <div class="row"><label for="sPhi">Plane tilt φ from horizontal</label><span class="val" id="vPhi">20.0°</span></div>
-        <input type="range" id="sPhi" min="0" max="89" step="0.5" value="20">
-        <p class="note">The only control that matters. Tilt alone decides the shape.</p>
-      </div>
-      <div class="ctl">
-        <div class="row"><label for="sAlpha">Cone half-angle α</label><span class="val" id="vAlpha">45.0°</span></div>
-        <input type="range" id="sAlpha" min="15" max="70" step="0.5" value="45">
-      </div>
-      <div class="ctl">
-        <div class="row"><label for="sH0">Plane height h₀</label><span class="val" id="vH0">1.20</span></div>
-        <input type="range" id="sH0" min="0" max="2.4" step="0.01" value="1.2">
-        <p class="note">Moving it does not change e at all — only the size. Drop it to 0 and the plane passes through the apex, which is where the degenerate cases live.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <p class="eyebrow">Presets</p>
-      <div class="presets">
-        <button data-e="0" type="button"><span class="sw" style="background:var(--circle)"></span>Circle · e = 0</button>
-        <button data-e="0.6" type="button"><span class="sw" style="background:var(--ellipse)"></span>Ellipse · e = 0.6</button>
-        <button data-e="1" type="button"><span class="sw" style="background:var(--parabola)"></span>Parabola · e = 1</button>
-        <button data-e="1.5" type="button"><span class="sw" style="background:var(--hyperbola)"></span>Hyperbola · e = 1.5</button>
-        <button class="wide" id="pDegen" type="button">Degenerate it — the “Line” and “Point” from the board</button>
-      </div>
-      <p class="eyebrow" style="margin-top:20px">Show</p>
-      <div class="toggles">
-        <label class="tg"><input type="checkbox" id="tAxes" checked>a, b and p on the section</label>
-        <label class="tg"><input type="checkbox" id="tPlane" checked>Cutting plane</label>
-        <label class="tg"><input type="checkbox" id="tDandelin" checked>Dandelin sphere, near side</label>
-        <label class="tg"><input type="checkbox" id="tFar">Far sphere too (stretches the cone)</label>
-        <label class="tg"><input type="checkbox" id="tSpin">Slow rotation</label>
-      </div>
-    </div>
-
-    <div class="card">
-      <p class="eyebrow">Read-out</p>
-      <table class="read">
-        <tr><td>e = sin φ / cos α</td><td id="rFormula">sin 20° / cos 45°</td></tr>
-        <tr><td>α + φ</td><td id="rSum">65.0°</td></tr>
-        <tr><td>Semi-major axis a</td><td id="rA">1.00 p</td></tr>
-        <tr><td>Semi-minor axis b</td><td id="rB">1.00 p</td></tr>
-        <tr><td>Periapsis r<sub>p</sub></td><td id="rRp">1.00 p</td></tr>
-        <tr><td>Apoapsis r<sub>a</sub></td><td id="rRa">1.00 p</td></tr>
-        <tr><td>v<sub>p</sub> / v<sub>circ</sub> at periapsis</td><td id="rV">1.000</td></tr>
-        <tr><td>Specific energy ε</td><td id="rE">negative</td></tr>
-      </table>
-      <p class="readout-note" id="liveNote"></p>
-    </div>
-  </div>
-
-  <div class="live" id="caption"></div>
-
-  <div class="prose">
-    <section>
-      <h2>Why the tilt is the whole story</h2>
-      <p>A generator — one of the straight lines on the cone's surface — leans <b>α</b> away from the axis. Hold the plane horizontal and it meets every generator at the same distance, so the section closes into a circle.</p>
-      <p>Tilt the plane and it starts biting shallow on one side and deep on the other. The section stretches. That stretch is exactly what e measures:</p>
-      <div class="eq">e = sin φ / cos α</div>
-      <p>At <b>φ = 90° − α</b> the plane runs parallel to one generator. It can never meet that line, so the section cannot close, and you get a <b>parabola</b>. Tilt further and the plane reaches the opposite nappe as well — that second intersection is the <b>second branch</b> of the hyperbola.</p>
-      <p>Every boundary is the same test: <b>is α + φ less than, equal to, or greater than 90°?</b></p>
-    </section>
-
-    <section>
-      <h2>Where the formula comes from</h2>
-      <p>Put the apex at the origin with the axis along y. The cone is x² + z² = (y tan α)², and the tilted plane is y = h₀ + z tan φ. Substituting one into the other and rewriting in coordinates on the plane itself gives</p>
-      <div class="eq">u² + (cos²φ − tan²α sin²φ) v² + … = 0</div>
-      <p>which is an ellipse when the v² coefficient is positive, a hyperbola when negative. Completing the square gives semi-axes a and b with</p>
-      <div class="eq">e² = 1 − b²/a² = sin²φ / cos²α</div>
-      <p>So the eccentricity falls straight out of the two angles, and <b>h₀ never appears</b>. That is why sliding the plane up and down rescales the section without ever changing its shape.</p>
-    </section>
-
-    <section>
-      <h2>Why a focus is a focus</h2>
-      <p>Drop in a sphere that is inscribed in the cone <em>and</em> tangent to the cutting plane. For an ellipse there are two — one on each side. Each one touches the plane at exactly one point, and <b>that point is a focus</b>.</p>
-      <p>The proof is short. From any point P on the section, all tangent lengths to a given sphere are equal. Running along the generator through P, the distance from P to each sphere's contact circle is that same tangent length. Their sum is the length of generator between the two contact circles — a constant, independent of P. Constant sum of distances to two points is the definition of an ellipse.</p>
-      <p>Turn the near sphere on and watch the amber dot: it is the tangency point, and it lands precisely on the focus in the face-on view.</p>
-    </section>
-
-    <section>
-      <h2>The bridge to orbits</h2>
-      <p>The orbit equation from the R2BP derivation is the polar equation of a conic with the <b>focus at the origin</b>:</p>
-      <div class="eq">r = (h²/μ) / (1 + e cos θ) = p / (1 + e cos θ)</div>
-      <p>Because every solution of the two-body problem takes that form, <b>an orbit cannot be anything but a conic section</b>. The only remaining question is what e happens to be — and energy answers it:</p>
-      <div class="eq">e = √(1 + 2εh²/μ²),  ε = v²/2 − μ/r</div>
-      <p>ε &lt; 0 gives e &lt; 1 and a bound orbit. ε = 0 gives exactly e = 1, escape with nothing to spare. ε &gt; 0 gives e &gt; 1 and a hyperbolic escape with velocity left over.</p>
-      <p>At periapsis v<sub>p</sub> = √(1+e) · v<sub>circ</sub>, so speeding up from a circular orbit by a factor of <b>√2</b> walks e from 0 to 1 — the instant the plane goes parallel to a generator. <b>Tilting the plane and burning the engine are the same operation.</b></p>
-    </section>
-  </div>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
-(function(){
-"use strict";
-
-const HEX = {
-  circle:'#4a8de6', ellipse:'#b57b2e', parabola:'#d2559f', hyperbola:'#43a05a',
-  line:'#d4544a', point:'#9b6fd4', focus:'#e8c34a'
-};
-const NUM = k => parseInt(HEX[k].slice(1),16);
-const SLANT = 3.4;
-const rad = d => d*Math.PI/180;
-const S = { alpha:45, phi:20, h0:1.2, plane:true, dandelin:true, far:false, spin:false, axes:true };
-
-/* ================= 3D ================= */
-const host = document.getElementById('three');
-const renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.setClearColor(0x1c1e24,1);
-host.appendChild(renderer.domElement);
-
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(42,1,0.1,300);
-scene.add(new THREE.AmbientLight(0xffffff,0.62));
-const key = new THREE.DirectionalLight(0xffffff,0.72); key.position.set(5,8,6); scene.add(key);
-const rim = new THREE.DirectionalLight(0x8fa8d0,0.30); rim.position.set(-6,-3,-5); scene.add(rim);
-
-const axisGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-30,0),new THREE.Vector3(0,30,0)]);
-const axisLine = new THREE.Line(axisGeo,new THREE.LineDashedMaterial({color:0x5a606d,dashSize:0.16,gapSize:0.13}));
-axisLine.computeLineDistances(); scene.add(axisLine);
-
-const coneGroup=new THREE.Group(), planeGroup=new THREE.Group(),
-      curveGroup=new THREE.Group(), dandGroup=new THREE.Group();
-[coneGroup,planeGroup,curveGroup,dandGroup].forEach(g=>scene.add(g));
-
-function clear(g){
-  while(g.children.length){
-    const c=g.children.pop();
-    if(c.geometry) c.geometry.dispose();
-    if(c.material)(Array.isArray(c.material)?c.material:[c.material]).forEach(m=>m.dispose());
-  }
-}
-
-const ecc = () => Math.sin(rad(S.phi))/Math.cos(rad(S.alpha));
-
-function classify(){
-  const e = ecc(), degenerate = S.h0 < 0.045;
-  if(degenerate){
-    if(Math.abs(e-1)<0.02) return {key:'line', name:'Line (degenerate)', hex:HEX.line};
-    if(e<1)                return {key:'point',name:'Point (degenerate)',hex:HEX.point};
-    return {key:'lines', name:'Two lines (degenerate)', hex:HEX.line};
-  }
-  if(e<0.015)           return {key:'circle',   name:'Circle',    hex:HEX.circle};
-  if(Math.abs(e-1)<.012)return {key:'parabola', name:'Parabola',  hex:HEX.parabola};
-  if(e<1)               return {key:'ellipse',  name:'Ellipse',   hex:HEX.ellipse};
-  return                       {key:'hyperbola',name:'Hyperbola', hex:HEX.hyperbola};
-}
-
-function dandelinSpheres(){
-  const e = ecc();
-  if(!S.dandelin || e>=0.999 || S.h0<0.05) return null;
-  const a=rad(S.alpha), p=rad(S.phi), sa=Math.sin(a), cp=Math.cos(p), sp=Math.sin(p);
-  const list=[{d:S.h0*cp/(cp+sa)}];
-  const farD = S.h0*cp/(cp-sa);
-  if(S.far && isFinite(farD) && farD>0) list.push({d:farD});
-  list.forEach(s=>s.R=s.d*sa);
-  return {list, topNeeded:list.reduce((m,s)=>Math.max(m,s.d+s.R),0),
-          n:new THREE.Vector3(0,cp,-sp), P0:new THREE.Vector3(0,S.h0,0)};
-}
-
-function buildCone(topNeeded){
-  clear(coneGroup);
-  const a=rad(S.alpha), k=Math.tan(a);
-  const H=SLANT*Math.cos(a);
-  const Hup=Math.min(Math.max(H,(topNeeded||0)*1.04), H*4.6);
-  const solid=new THREE.MeshStandardMaterial({color:0x757b88,roughness:.92,metalness:0,
-    transparent:true,opacity:.18,side:THREE.DoubleSide,depthWrite:false});
-  const wire=new THREE.MeshBasicMaterial({color:0x585e6b,wireframe:true,transparent:true,opacity:.26});
-  const nappe=(h,flip)=>{
-    const g=new THREE.ConeGeometry(h*k,h,72,1,true); g.translate(0,-h/2,0);
-    const m=new THREE.Mesh(g,solid); if(flip) m.rotation.x=Math.PI; coneGroup.add(m);
-    const wg=new THREE.ConeGeometry(h*k,h,24,3,true); wg.translate(0,-h/2,0);
-    const w=new THREE.Mesh(wg,wire); if(flip) w.rotation.x=Math.PI; coneGroup.add(w);
-  };
-  nappe(Hup,true); nappe(H,false);
-  return {H,Hup};
-}
-
-function buildPlane(extent){
-  clear(planeGroup);
-  if(!S.plane) return;
-  const p=rad(S.phi);
-  const n=new THREE.Vector3(0,Math.cos(p),-Math.sin(p)).normalize();
-  const sz=Math.max(4,Math.min(26,extent*Math.tan(rad(S.alpha))*2.7));
-  const g=new THREE.PlaneGeometry(sz,sz,1,1); g.rotateX(-Math.PI/2);
-  const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:0xd6d9e0,roughness:1,metalness:0,
-    transparent:true,opacity:.12,side:THREE.DoubleSide,depthWrite:false}));
-  m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),n);
-  m.position.set(0,S.h0,0); planeGroup.add(m);
-  const el=new THREE.LineSegments(new THREE.EdgesGeometry(g),
-    new THREE.LineBasicMaterial({color:0x878d9a,transparent:true,opacity:.45}));
-  el.quaternion.copy(m.quaternion); el.position.copy(m.position); planeGroup.add(el);
-}
-
-// contiguous branches of the cone ∩ plane curve, in 3D
-function branches(H,Hup){
-  const k=Math.tan(rad(S.alpha)), t=Math.tan(rad(S.phi)), h0=S.h0;
-  const A=k*k*t*t-1, B=2*k*k*h0*t, Cc=k*k*h0*h0;
-  const N=3000, Z=9, runs=[]; let cur=null;
-  for(let i=0;i<=N;i++){
-    const z=-Z+2*Z*i/N, D=A*z*z+B*z+Cc, y=h0+z*t;
-    if(D>=0 && y<=Hup+1e-9 && y>=-H-1e-9){
-      if(!cur){cur=[];runs.push(cur);}
-      cur.push({x:Math.sqrt(Math.max(D,0)),y,z,D});
-    } else cur=null;
-  }
-  const out=[];
-  runs.forEach(run=>{
-    if(run.length<3) return;
-    const vertexAtStart = run[0].D <= run[run.length-1].D;
-    const pts=[];
-    if(vertexAtStart){
-      for(let i=run.length-1;i>=0;i--) pts.push(new THREE.Vector3(-run[i].x,run[i].y,run[i].z));
-      for(let i=0;i<run.length;i++)    pts.push(new THREE.Vector3( run[i].x,run[i].y,run[i].z));
-    } else {
-      for(let i=0;i<run.length;i++)    pts.push(new THREE.Vector3(-run[i].x,run[i].y,run[i].z));
-      for(let i=run.length-1;i>=0;i--) pts.push(new THREE.Vector3( run[i].x,run[i].y,run[i].z));
-    }
-    const step=Math.max(1,Math.floor(pts.length/420)), thin=[];
-    for(let i=0;i<pts.length;i+=step) thin.push(pts[i]);
-    thin.push(pts[pts.length-1]);
-    if(thin.length>3) out.push(thin);
-  });
-  return out;
-}
-
-function buildCurve(H,Hup,info){
-  clear(curveGroup);
-  const mat=new THREE.MeshBasicMaterial({color:NUM(
-    info.key==='line'||info.key==='lines'?'line':info.key==='point'?'point':info.key)});
-  if(info.key==='point'){
-    curveGroup.add(new THREE.Mesh(new THREE.SphereGeometry(0.08,20,16),mat));
-    return [];
-  }
-  const br=branches(H,Hup);
-  br.forEach(pts=>{
-    try{
-      const closed=pts[0].distanceTo(pts[pts.length-1])<0.02;
-      const curve=new THREE.CatmullRomCurve3(pts,closed,'centripetal',0.5);
-      curveGroup.add(new THREE.Mesh(
-        new THREE.TubeGeometry(curve,Math.min(600,pts.length*2),0.034,10,closed),mat));
-    }catch(err){}
-  });
-  return br;
-}
-
-function buildDandelin(dd){
-  clear(dandGroup);
-  if(!dd) return;
-  const sMat=new THREE.MeshStandardMaterial({color:0x9fb6d8,roughness:.55,metalness:.05,
-    transparent:true,opacity:.13,depthWrite:false});
-  const wMat=new THREE.MeshBasicMaterial({color:0x7d93b4,wireframe:true,transparent:true,opacity:.2});
-  const fMat=new THREE.MeshBasicMaterial({color:NUM('focus')});
-  dd.list.forEach(s=>{
-    if(!isFinite(s.d)||s.d<=0||!isFinite(s.R)) return;
-    const Cn=new THREE.Vector3(0,s.d,0);
-    const m=new THREE.Mesh(new THREE.SphereGeometry(s.R,40,28),sMat); m.position.copy(Cn); dandGroup.add(m);
-    const w=new THREE.Mesh(new THREE.SphereGeometry(s.R,16,10),wMat); w.position.copy(Cn); dandGroup.add(w);
-    const sd=dd.n.dot(Cn.clone().sub(dd.P0));
-    const T=Cn.clone().sub(dd.n.clone().multiplyScalar(sd));
-    const f=new THREE.Mesh(new THREE.SphereGeometry(0.085,18,14),fMat); f.position.copy(T); dandGroup.add(f);
-  });
-}
-
-/* camera: distance is fitted to the geometry AND the viewport aspect */
-let camTheta=0.72, camPhi=1.17, camR=11, zoomK=1, fitR=11, lookY=0, extentNow=2.4;
-function computeFit(){
-  const slant=extentNow/Math.max(Math.cos(rad(S.alpha)),0.25);
-  const vF=rad(camera.fov)/2;
-  const hF=Math.atan(Math.tan(vF)*Math.max(camera.aspect,0.2));
-  fitR=(slant*1.22)/Math.max(Math.sin(Math.min(vF,hF)),0.1);
-}
-function applyCam(){
-  camR=Math.max(2.5,fitR*zoomK);
-  camera.position.set(
-    camR*Math.sin(camPhi)*Math.sin(camTheta),
-    camR*Math.cos(camPhi)+lookY,
-    camR*Math.sin(camPhi)*Math.cos(camTheta));
-  camera.lookAt(0,lookY,0);
-}
-let drag=false,lx=0,ly=0;
-const cv=renderer.domElement; cv.style.cursor='grab';
-cv.addEventListener('pointerdown',e=>{drag=true;lx=e.clientX;ly=e.clientY;cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';});
-cv.addEventListener('pointerup',()=>{drag=false;cv.style.cursor='grab';});
-cv.addEventListener('pointermove',e=>{
-  if(!drag) return;
-  camTheta-=(e.clientX-lx)*0.0068;
-  camPhi=Math.max(0.13,Math.min(Math.PI-0.13,camPhi-(e.clientY-ly)*0.0068));
-  lx=e.clientX; ly=e.clientY; applyCam();
-});
-cv.addEventListener('wheel',e=>{
-  e.preventDefault();
-  zoomK=Math.max(0.32,Math.min(2.6,zoomK*(1+e.deltaY*0.0012)));
-  applyCam();
-},{passive:false});
-
-/* ================= face-on section ================= */
-const sc=document.getElementById('sect'), sx=sc.getContext('2d');
-
-// analytic conic data in plane coordinates (u across, v along the tilt).
-// b² = a·p in every case, so p — the one length that stays finite for all four
-// classes — is what the drawing and the read-out are anchored to.
-function sectionConic(){
-  const k=Math.tan(rad(S.alpha)), sp=Math.sin(rad(S.phi)), cp=Math.cos(rad(S.phi)), h0=S.h0;
-  const Q=cp*cp-k*k*sp*sp;
-  const e=Math.sqrt(Math.max(0,1-Q));
-  if(Math.abs(Q)<1e-4){                                   // parabola: no centre, a is infinite
-    if(sp<1e-6) return null;
-    const vV=h0/(2*sp), f=k*k*h0*sp/2;
-    return {kind:'par', e:1, foci:[{u:0,v:vV-f}], centre:null,
-            a:Infinity, b:Infinity, p:2*f, vertex:{u:0,v:vV}, dir:-1};
-  }
-  const v0=-k*k*h0*sp/Q;
-  const a=k*h0*cp/Math.abs(Q);
-  const p=a*Math.abs(1-e*e);
-  const b=Math.sqrt(a*p);
-  return {kind:Q>0?'ell':'hyp', e, a, b, p,
-          foci:[{u:0,v:v0+a*e},{u:0,v:v0-a*e}], centre:{u:0,v:v0},
-          vertex:{u:0,v:v0+a}, dir:1};
-}
-
-function drawSection(info,br){
-  const dpr=Math.min(devicePixelRatio,2);
-  const w=sc.clientWidth||10, h=sc.clientHeight||10;
-  sc.width=w*dpr; sc.height=h*dpr;
-  sx.setTransform(dpr,0,0,dpr,0,0);
-  sx.fillStyle='#1c1e24'; sx.fillRect(0,0,w,h);
-
-  const cp=Math.cos(rad(S.phi));
-  const polys=br.map(pts=>pts.map(P=>({u:P.x, v:-P.z/Math.max(cp,1e-6)})));
-  const con=sectionConic();
-
-  if(info.key==='point'){
-    sx.fillStyle=HEX.point;
-    sx.beginPath(); sx.arc(w/2,h/2,5,0,7); sx.fill();
-    label(w,h,'A single point — the apex.');
-    return;
-  }
-  if(!polys.length){ label(w,h,'No intersection in view.'); return; }
-
-  let mnU=1e9,mxU=-1e9,mnV=1e9,mxV=-1e9;
-  const grow=(u,v)=>{
-    if(!isFinite(u)||!isFinite(v)) return;
-    mnU=Math.min(mnU,u); mxU=Math.max(mxU,u); mnV=Math.min(mnV,v); mxV=Math.max(mxV,v);
-  };
-  polys.forEach(p=>p.forEach(q=>grow(q.u,q.v)));
-  const showF = con && (info.key==='ellipse'||info.key==='circle'||info.key==='parabola'||info.key==='hyperbola');
-  if(showF){
-    con.foci.forEach((f,i)=>{ if(info.key==='hyperbola'&&i>0) return; grow(f.u,f.v); });
-    if(S.axes){
-      if(con.centre) grow(con.centre.u,con.centre.v);
-      grow(con.vertex.u,con.vertex.v);
-      grow(con.foci[0].u+con.p, con.foci[0].v);                       // tip of p
-      if(con.centre && isFinite(con.b)) grow(con.centre.u+con.b, con.centre.v);
-    }
-  }
-
-  const pad=34;
-  const s=Math.min((w-2*pad)/Math.max(mxV-mnV,0.35),(h-2*pad)/Math.max(mxU-mnU,0.35));
-  const cx=w/2-s*(mnV+mxV)/2, cy=h/2+s*(mnU+mxU)/2;
-  const X=v=>cx+s*v, Y=u=>cy-s*u;      // v horizontal, u vertical
-
-  // recessive axes through the focus
-  const fv = showF ? con.foci[0].v : 0;
-  sx.strokeStyle='#282b33'; sx.lineWidth=1;
-  sx.beginPath(); sx.moveTo(0,Y(0)); sx.lineTo(w,Y(0));
-  sx.moveTo(X(fv),0); sx.lineTo(X(fv),h); sx.stroke();
-
-  // the curve
-  sx.strokeStyle=info.hex; sx.lineWidth=2.2; sx.lineJoin='round'; sx.lineCap='round';
-  polys.forEach(p=>{
-    sx.beginPath();
-    p.forEach((q,i)=> i? sx.lineTo(X(q.v),Y(q.u)) : sx.moveTo(X(q.v),Y(q.u)));
-    if(info.key==='ellipse'||info.key==='circle') sx.closePath();
-    sx.stroke();
-  });
-
-  if(showF){
-    const f=con.foci[0];
-    if(S.axes){
-      const seg=(v1,u1,v2,u2,col,dash,txt)=>{
-        sx.save();
-        sx.strokeStyle=col; sx.lineWidth=1.6; sx.setLineDash(dash?[4,4]:[]);
-        sx.beginPath(); sx.moveTo(X(v1),Y(u1)); sx.lineTo(X(v2),Y(u2)); sx.stroke();
-        sx.setLineDash([]);
-        // end caps
-        [[v1,u1],[v2,u2]].forEach(([v,u])=>{
-          sx.beginPath(); sx.arc(X(v),Y(u),2.4,0,7); sx.fillStyle=col; sx.fill();
-        });
-        sx.fillStyle=col;
-        sx.font='600 11.5px "IBM Plex Mono",ui-monospace,monospace';
-        sx.textAlign='center'; sx.textBaseline='middle';
-        sx.fillText(txt,(X(v1)+X(v2))/2,(Y(u1)+Y(u2))/2 - 11);
-        sx.restore();
-      };
-      // a : centre -> vertex (dashed for a hyperbola, where the centre is off the curve)
-      if(con.centre && isFinite(con.a))
-        seg(con.centre.v,con.centre.u, con.vertex.v,con.vertex.u,
-            '#c3c9d6', info.key==='hyperbola', 'a');
-      // b : centre -> conjugate direction
-      if(con.centre && isFinite(con.b))
-        seg(con.centre.v,con.centre.u, con.centre.v,con.centre.u+con.b,
-            '#7e8593', info.key==='hyperbola', 'b');
-      // p : the half-chord at the focus — finite in every class
-      seg(f.v,f.u, f.v,f.u+con.p, HEX.focus, false, 'p');
-      // centre marker
-      if(con.centre){
-        sx.strokeStyle='#7e8593'; sx.lineWidth=1.3;
-        const cxp=X(con.centre.v), cyp=Y(con.centre.u);
-        sx.beginPath();
-        sx.moveTo(cxp-5,cyp); sx.lineTo(cxp+5,cyp);
-        sx.moveTo(cxp,cyp-5); sx.lineTo(cxp,cyp+5); sx.stroke();
-      }
-    }
-    // second focus, hollow
-    if(info.key==='ellipse' && con.foci[1]){
-      sx.strokeStyle='#6f7684'; sx.lineWidth=1.5;
-      sx.beginPath(); sx.arc(X(con.foci[1].v),Y(con.foci[1].u),4.5,0,7); sx.stroke();
-    }
-    // primary focus = the central body
-    sx.fillStyle=HEX.focus;
-    sx.beginPath(); sx.arc(X(f.v),Y(f.u),6.5,0,7); sx.fill();
-    sx.strokeStyle='#1c1e24'; sx.lineWidth=2;
-    sx.beginPath(); sx.arc(X(f.v),Y(f.u),6.5,0,7); sx.stroke();
-  }
-  label(w,h, info.key==='lines' ? 'Two straight lines through the apex — the asymptotes of a collapsed hyperbola.'
-           : info.key==='line'  ? 'One straight line — the plane lies flat against a single generator.'
-           : 'r = p / (1 + e cos θ)   ·   focus at the amber dot');
-}
-function label(w,h,txt){
-  sx.fillStyle='#6f7684';
-  sx.font='11px "IBM Plex Mono",ui-monospace,monospace';
-  sx.textAlign='left'; sx.textBaseline='alphabetic';
-  sx.fillText(txt,12,h-12);
-}
-
-/* ================= a / p across the classes ================= */
-const ac=document.getElementById('achart'), ax=ac.getContext('2d');
-const EMAX=2.2, YMAX=6;
-const aOverP = e => 1/(1-e*e);
-let hoverE=null, chartBox=null;
-
-function drawChart(){
-  const dpr=Math.min(devicePixelRatio,2);
-  const w=ac.clientWidth||10, h=ac.clientHeight||10;
-  ac.width=w*dpr; ac.height=h*dpr; ax.setTransform(dpr,0,0,dpr,0,0);
-  ax.fillStyle='#1c1e24'; ax.fillRect(0,0,w,h);
-  const L=52,R=16,T=26,B=34;
-  const X=e=>L+(w-L-R)*e/EMAX;
-  const Y=y=>T+(h-T-B)*(YMAX-y)/(2*YMAX);
-  chartBox={L,R,T,B,w,h};
-  const mono=s=>ax.font=s+'px "IBM Plex Mono",ui-monospace,monospace';
-
-  // class bands
-  const band=(e0,e1,hex)=>{ax.fillStyle=hex+'16';ax.fillRect(X(e0),T,X(e1)-X(e0),h-T-B);};
-  band(0,1,HEX.ellipse); band(1,EMAX,HEX.hyperbola);
-
-  // grid + ticks
-  ax.strokeStyle='#282b33'; ax.lineWidth=1; ax.fillStyle='#6f7684';
-  mono(10); ax.textAlign='right'; ax.textBaseline='middle';
-  [-6,-3,0,3,6].forEach(y=>{
-    ax.beginPath(); ax.moveTo(L,Y(y)); ax.lineTo(w-R,Y(y)); ax.stroke();
-    ax.fillText(String(y),L-8,Y(y));
-  });
-  ax.textAlign='center'; ax.textBaseline='top';
-  [0,0.5,1,1.5,2].forEach(e=>ax.fillText(e.toFixed(1),X(e),h-B+8));
-
-  // zero line, a touch stronger
-  ax.strokeStyle='#3a3f4a'; ax.lineWidth=1.4;
-  ax.beginPath(); ax.moveTo(L,Y(0)); ax.lineTo(w-R,Y(0)); ax.stroke();
-
-  // the e = 1 asymptote
-  ax.save();
-  ax.strokeStyle=HEX.parabola; ax.lineWidth=1.6; ax.setLineDash([5,4]);
-  ax.beginPath(); ax.moveTo(X(1),T); ax.lineTo(X(1),h-B); ax.stroke();
-  ax.restore();
-
-  // band labels
-  mono(10); ax.textAlign='center'; ax.textBaseline='top';
-  ax.fillStyle=HEX.ellipse;   ax.fillText('ELLIPSE',   X(0.5), T-18);
-  ax.fillStyle=HEX.hyperbola; ax.fillText('HYPERBOLA', X(1.6), T-18);
-  ax.fillStyle=HEX.parabola;  ax.fillText('e = 1',     X(1),   h-B-16);
-
-  // the curve, clipped to the plot box, coloured by class
-  ax.save();
-  ax.beginPath(); ax.rect(L,T,w-L-R,h-T-B); ax.clip();
-  ax.lineWidth=2.2; ax.lineJoin='round'; ax.lineCap='round';
-  const arc=(e0,e1,hex)=>{
-    ax.strokeStyle=hex; ax.beginPath();
-    let started=false;
-    for(let i=0;i<=600;i++){
-      const e=e0+(e1-e0)*i/600, y=aOverP(e);
-      if(!isFinite(y)||Math.abs(y)>YMAX*2.4){started=false;continue;}
-      const px=X(e),py=Y(y);
-      started?ax.lineTo(px,py):ax.moveTo(px,py); started=true;
-    }
-    ax.stroke();
-  };
-  arc(0,0.995,HEX.ellipse);
-  arc(1.005,EMAX,HEX.hyperbola);
-  ax.restore();
-
-  // e = 0 is a single point on this curve, not a band
-  ax.fillStyle=HEX.circle;
-  ax.beginPath(); ax.arc(X(0),Y(1),4.5,0,7); ax.fill();
-
-  // hover readout
-  if(hoverE!==null && hoverE>=0 && hoverE<=EMAX){
-    const y=aOverP(hoverE);
-    ax.save();
-    ax.strokeStyle='#565c69'; ax.lineWidth=1; ax.setLineDash([3,3]);
-    ax.beginPath(); ax.moveTo(X(hoverE),T); ax.lineTo(X(hoverE),h-B); ax.stroke();
-    ax.restore();
-    const txt = Math.abs(hoverE-1)<0.01 ? 'e '+hoverE.toFixed(2)+'   a/p  ±∞'
-              : 'e '+hoverE.toFixed(2)+'   a/p '+(Math.abs(y)>99?(y>0?'+':'-')+'99':y.toFixed(2));
-    mono(10.5); ax.textAlign='left'; ax.textBaseline='middle';
-    const tw=ax.measureText(txt).width+14;
-    const tx=Math.min(X(hoverE)+9, w-R-tw), ty=T+13;
-    ax.fillStyle='#24272f'; ax.strokeStyle='#3a3f4a'; ax.lineWidth=1;
-    ax.beginPath(); ax.rect(tx,ty-10,tw,21); ax.fill(); ax.stroke();
-    ax.fillStyle='#eceef3'; ax.fillText(txt,tx+7,ty+1);
-  }
-
-  // where we are right now
-  const e=ecc(), info=classify();
-  if(isFinite(e) && e<=EMAX){
-    const y=aOverP(e);
-    if(Math.abs(y)<=YMAX){
-      ax.fillStyle=info.hex;
-      ax.beginPath(); ax.arc(X(e),Y(y),5.5,0,7); ax.fill();
-      ax.strokeStyle='#1c1e24'; ax.lineWidth=2;
-      ax.beginPath(); ax.arc(X(e),Y(y),5.5,0,7); ax.stroke();
-    } else {                                   // off the top or bottom of the scale
-      const up=y>0, py=up?T+7:h-B-7;
-      ax.fillStyle=info.hex;
-      ax.beginPath();
-      ax.moveTo(X(e),up?T+1:h-B-1);
-      ax.lineTo(X(e)-5,py+(up?7:-7)); ax.lineTo(X(e)+5,py+(up?7:-7));
-      ax.closePath(); ax.fill();
-    }
-  }
-
-  // axis titles
-  mono(10); ax.fillStyle='#6f7684';
-  ax.textAlign='left'; ax.textBaseline='alphabetic';
-  ax.fillText('a / p',6,T-12);
-  ax.textAlign='right'; ax.fillText('eccentricity e',w-R,h-6);
-}
-
-ac.addEventListener('pointermove',ev=>{
-  if(!chartBox) return;
-  const r=ac.getBoundingClientRect();
-  const x=ev.clientX-r.left;
-  const {L,R,w}=chartBox;
-  hoverE=Math.max(0,Math.min(EMAX,(x-L)/(w-L-R)*EMAX));
-  drawChart();
-});
-ac.addEventListener('pointerleave',()=>{hoverE=null;drawChart();});
-
-/* ================= copy ================= */
-function caption(info){
-  const e=ecc(), sum=(S.alpha+S.phi).toFixed(0);
-  switch(info.key){
-    case 'point': return 'The plane passes through the <b>apex only</b>, and it is tilted too gently to reach anything else — so the whole intersection is a single point. This is the <b>“Point”</b> from the board. Raise h₀ and it opens back into a circle or an ellipse.';
-    case 'line':  return 'The plane goes through the apex <b>and</b> runs parallel to a generator, so it lies flat against that one line. The intersection is a <b>single straight line</b> — the <b>“Line”</b> from the board.';
-    case 'lines': return 'Through the apex and tilted steeply, the plane slices both nappes at once and the intersection collapses to <b>two crossing lines</b>. These are exactly the asymptotes a hyperbola would have had.';
-    case 'circle':return 'The plane is perpendicular to the axis, so it meets every generator at the same distance. The section is a <b>circle</b>, e = 0 — uniform circular motion in orbit terms.';
-    case 'ellipse':return `Tilted, but still <b>α + φ = ${sum}° &lt; 90°</b>, so the plane crosses every generator and the section closes into an <b>ellipse</b> with e = ${e.toFixed(2)}. Essentially every satellite and planet lives here.`;
-    case 'parabola':return 'The plane is now <b>exactly parallel to one generator</b> (α + φ = 90°). It can only meet that line at infinity, so the section never closes — a <b>parabola</b>, e = 1. This is escape velocity with nothing to spare.';
-    default: return `Tilted past the limit to <b>α + φ = ${sum}° &gt; 90°</b>, the plane now cuts <b>both</b> nappes — which is why a <b>hyperbola has two branches</b>. Only the branch wrapping the central body is physical. e = ${e.toFixed(2)}, and the spacecraft keeps speed after escaping.`;
-  }
-}
-
-/* ================= update ================= */
-function update(){
-  const info=classify();
-  const dd=dandelinSpheres();
-  const {H,Hup}=buildCone(dd?dd.topNeeded:0);
-  extentNow=Math.max(H,Hup);
-  buildPlane(extentNow);
-  const br=buildCurve(H,Hup,info);
-  buildDandelin(dd);
-  lookY=(Hup-H)/2*0.85;
-  computeFit(); applyCam();
-
-  const e=ecc();
-  const tn=document.getElementById('typeName');
-  tn.textContent=info.name; tn.style.color=info.hex;
-  const en=document.getElementById('eNow');
-  en.textContent=e>40?'∞':e.toFixed(2); en.style.color=info.hex;
-
-  document.getElementById('vPhi').textContent=S.phi.toFixed(1)+'°';
-  document.getElementById('vAlpha').textContent=S.alpha.toFixed(1)+'°';
-  document.getElementById('vH0').textContent=S.h0.toFixed(2);
-  document.getElementById('rFormula').textContent='sin '+S.phi.toFixed(0)+'° / cos '+S.alpha.toFixed(0)+'°';
-  document.getElementById('rSum').textContent=(S.alpha+S.phi).toFixed(1)+'°';
-
-  const par=Math.abs(e-1)<0.012;
-  const a=1/(1-e*e), b=1/Math.sqrt(Math.abs(1-e*e));
-  const set=(id,txt,col)=>{const el=document.getElementById(id);el.textContent=txt;el.style.color=col||'';};
-  set('rA', par?'∞ (parabolic)':a.toFixed(2)+' p', e>1?HEX.hyperbola:'');
-  set('rB', par?'∞ (parabolic)':b.toFixed(2)+' p');
-  set('rRp',(1/(1+e)).toFixed(2)+' p');
-  set('rRa', par ? 'none — escapes'
-          : e>1 ? 'none — escapes'
-          : (1/(1-e)).toFixed(2)+' p',
-       e>=1?HEX.hyperbola:'');
-  document.getElementById('rV').textContent=Math.sqrt(1+e).toFixed(3);
-  const eps=document.getElementById('rE');
-  if(par){eps.textContent='zero — nothing left over';eps.style.color=HEX.parabola;}
-  else if(e<1){eps.textContent='negative — bound';eps.style.color=HEX.ellipse;}
-  else{eps.textContent='positive — escaping';eps.style.color=HEX.hyperbola;}
-
-  document.getElementById('liveNote').innerHTML =
-    par  ? 'ε = 0 exactly: v = √(2μ/r) at every r, so the craft reaches infinity with <b>zero</b> speed left. Any slower and it falls back.'
-  : e>1  ? 'a &lt; 0 is bookkeeping, not a length — it makes ε = −μ/2a come out positive. The real quantity is |a|, which sets the leftover speed v<sub>∞</sub> = √(μ/|a|). There is <b>no apoapsis</b>: θ = 180° is never reached.'
-         : 'Slide h₀ and watch every number above hold still.';
-
-  ['rowCircle','rowEllipse','rowParabola','rowHyperbola'].forEach(id=>
-    document.getElementById(id).classList.remove('on'));
-  const rowFor = par?'rowParabola' : e<0.015?'rowCircle' : e<1?'rowEllipse':'rowHyperbola';
-  document.getElementById(rowFor).classList.add('on');
-
-  document.getElementById('caption').innerHTML=caption(info);
-  drawSection(info,br);
-  drawChart();
-}
-
-/* ================= wiring ================= */
-function bind(id,key){
-  const s=document.getElementById(id);
-  s.addEventListener('input',()=>{S[key]=parseFloat(s.value);update();});
-  return s;
-}
-const sPhi=bind('sPhi','phi'), sAlpha=bind('sAlpha','alpha'), sH0=bind('sH0','h0');
-
-document.querySelectorAll('.presets button[data-e]').forEach(b=>{
-  b.addEventListener('click',()=>{
-    const t=parseFloat(b.dataset.e);
-    if(S.h0<0.3){S.h0=1.2;sH0.value=1.2;}
-    if(t===0){S.phi=0;}
-    else{
-      if(t*Math.cos(rad(S.alpha))>0.97){            // widen the cone when e is out of reach
-        const phiRef=rad(t>=1?70:80);
-        let cosA=Math.sin(phiRef)/t;
-        cosA=Math.min(Math.cos(rad(15)),Math.max(Math.cos(rad(70)),cosA));
-        S.alpha=Math.acos(cosA)*180/Math.PI; sAlpha.value=S.alpha;
-      }
-      S.phi=Math.asin(Math.min(0.9999,t*Math.cos(rad(S.alpha))))*180/Math.PI;
-    }
-    sPhi.value=S.phi; update();
-  });
-});
-document.getElementById('pDegen').addEventListener('click',()=>{S.h0=0;sH0.value=0;update();});
-document.getElementById('tAxes').addEventListener('change',e=>{S.axes=e.target.checked;update();});
-document.getElementById('tPlane').addEventListener('change',e=>{S.plane=e.target.checked;update();});
-document.getElementById('tDandelin').addEventListener('change',e=>{S.dandelin=e.target.checked;update();});
-document.getElementById('tFar').addEventListener('change',e=>{S.far=e.target.checked;update();});
-document.getElementById('tSpin').addEventListener('change',e=>{S.spin=e.target.checked;});
-document.getElementById('reset').addEventListener('click',()=>{
-  camTheta=0.72;camPhi=1.17;zoomK=1;computeFit();applyCam();
-});
-
-function resize(){
-  const w=Math.max(host.clientWidth,1), h=Math.max(host.clientHeight,1);
-  renderer.setSize(w,h,false);
-  camera.aspect=w/h; camera.updateProjectionMatrix();
-  computeFit(); applyCam();
-  update();
-}
-addEventListener('resize',resize);
-if(window.ResizeObserver){
-  const ro=new ResizeObserver(()=>{
-    const w=Math.max(host.clientWidth,1), h=Math.max(host.clientHeight,1);
-    renderer.setSize(w,h,false);
-    camera.aspect=w/h; camera.updateProjectionMatrix();
-    computeFit(); applyCam();
-    drawSection(classify(),branches(SLANT*Math.cos(rad(S.alpha)),extentNow));
-    drawChart();
-  });
-  ro.observe(host); ro.observe(sc); ro.observe(ac);
-}
-
-resize();
-(function loop(){
-  requestAnimationFrame(loop);
-  if(S.spin && !drag){camTheta+=0.0022;applyCam();}
-  renderer.render(scene,camera);
-})();
-})();
-</script>
 </body>
 </html>
